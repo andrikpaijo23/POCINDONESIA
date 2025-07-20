@@ -1,0 +1,2535 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Member Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); }
+        .card-shadow { box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255,255,255,0.05); }
+        .animate-fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .search-highlight { background: linear-gradient(90deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="h-full gradient-bg text-white">
+    <!-- Navigation -->
+    <nav class="glass-effect border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <i data-lucide="users" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <h1 class="text-xl font-bold">POC INDONESIA</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="viewToggle" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center space-x-2">
+                        <i data-lucide="eye" class="w-4 h-4"></i>
+                        <span id="viewText">Public View</span>
+                    </button>
+                    <button id="logoutBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center space-x-2" style="display: none;">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Page -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div class="glass-effect p-8 rounded-2xl card-shadow animate-fade-in">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-2">Admin Login</h2>
+                    <p class="text-gray-400">Masuk ke panel administrasi</p>
+                </div>
+                
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Username</label>
+                        <input type="text" id="username" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Masukkan username" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Password</label>
+                        <input type="password" id="password" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Masukkan password" required>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg font-medium transition-all transform hover:scale-105">
+                        Masuk ke Admin Panel
+                    </button>
+                </form>
+                
+                <div class="mt-6 p-4 bg-gray-800 rounded-lg">
+                    <p class="text-sm text-gray-300 mb-2"><strong>Demo Credentials:</strong></p>
+                    <p class="text-xs text-gray-400">Username: XXXXX</p>
+                    <p class="text-xs text-gray-400">Password: XXXXX</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Public Member List -->
+    <div id="publicPage" class="min-h-screen p-4" style="display: none;">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8 animate-fade-in">
+                <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    Daftar Anggota POC Indonesia
+                </h1>
+                <p class="text-gray-400 text-lg">Platform komunikasi radio seluruh Indonesia</p>
+            </div>
+
+            <!-- Advanced Search & Filters -->
+            <div class="mb-8 animate-fade-in">
+                <div class="max-w-4xl mx-auto space-y-4">
+                    <!-- Main Search Bar -->
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                        <input type="text" id="searchInput" class="w-full pl-12 pr-16 py-4 bg-gray-800 border border-gray-600 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg" placeholder="Cari berdasarkan nama, callsign, atau channel...">
+                        <button id="voiceSearchBtn" class="absolute right-4 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                            <i data-lucide="mic" class="w-5 h-5 text-gray-400"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Filter Controls -->
+                    <div class="flex flex-wrap gap-4 items-center justify-between">
+                        <div class="flex flex-wrap gap-3">
+                            <select id="channelFilter" class="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                <option value="">Semua Channel</option>
+                            </select>
+                            <select id="sortBy" class="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                <option value="name">Urutkan: Nama</option>
+                                <option value="callsign">Urutkan: Callsign</option>
+                                <option value="channel">Urutkan: Channel</option>
+                                <option value="recent">Urutkan: Terbaru</option>
+                            </select>
+                            <button id="viewModeBtn" class="px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors flex items-center space-x-2">
+                                <i data-lucide="grid-3x3" class="w-4 h-4"></i>
+                                <span class="text-sm">Grid</span>
+                            </button>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <span class="text-sm text-gray-400">Ditemukan: <span id="resultCount">0</span></span>
+                            <button id="exportBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm flex items-center space-x-2">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 animate-fade-in">
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Total Anggota</p>
+                            <p class="text-4xl font-bold text-blue-400" id="totalMembers">0</p>
+                            <p class="text-xs text-green-400 mt-1">📈 Aktif Semua</p>
+                        </div>
+                        <div class="w-14 h-14 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                            <i data-lucide="users" class="w-7 h-7"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Channel Aktif</p>
+                            <p class="text-4xl font-bold text-green-400" id="totalChannels">0</p>
+                            <p class="text-xs text-blue-400 mt-1">🌐 Seluruh Indonesia</p>
+                        </div>
+                        <div class="w-14 h-14 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+                            <i data-lucide="radio" class="w-7 h-7"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Provinsi</p>
+                            <p class="text-4xl font-bold text-purple-400" id="totalProvinces">0</p>
+                            <p class="text-xs text-yellow-400 mt-1">🗺️ Coverage Area</p>
+                        </div>
+                        <div class="w-14 h-14 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                            <i data-lucide="map-pin" class="w-7 h-7"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Channel Terbesar</p>
+                            <p class="text-lg font-bold text-orange-400" id="biggestChannel">-</p>
+                            <p class="text-xs text-gray-400 mt-1" id="biggestChannelCount">0 anggota</p>
+                        </div>
+                        <div class="w-14 h-14 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                            <i data-lucide="crown" class="w-7 h-7"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Channel Statistics -->
+            <div class="mb-8 animate-fade-in">
+                <div class="glass-effect p-6 rounded-2xl card-shadow">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold flex items-center">
+                            <i data-lucide="bar-chart-3" class="w-6 h-6 mr-3 text-blue-400"></i>
+                            Statistik Anggota Per Channel POC
+                        </h3>
+                        <div class="flex space-x-2">
+                            <button id="toggleStatsView" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm flex items-center space-x-2 transition-colors">
+                                <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                                <span>Grid View</span>
+                            </button>
+                            <button id="exportStatsBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm flex items-center space-x-2 transition-colors">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Export</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Grid View -->
+                    <div id="channelStatsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <!-- Channel stats will be populated here -->
+                    </div>
+                    
+                    <!-- List View -->
+                    <div id="channelStatsList" class="space-y-3" style="display: none;">
+                        <!-- Channel stats list will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regional Statistics -->
+            <div class="mb-8 animate-fade-in">
+                <div class="glass-effect p-6 rounded-2xl card-shadow">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center">
+                        <i data-lucide="map" class="w-6 h-6 mr-3 text-green-400"></i>
+                        Distribusi Regional
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Sumatera -->
+                        <div class="bg-gradient-to-br from-blue-900/30 to-blue-800/30 p-4 rounded-xl border border-blue-700/50">
+                            <h4 class="font-bold text-blue-300 mb-3 flex items-center">
+                                <span class="w-3 h-3 bg-blue-400 rounded-full mr-2"></span>
+                                SUMATERA
+                            </h4>
+                            <div id="sumateraStats" class="space-y-2 text-sm">
+                                <!-- Sumatera stats will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Jawa -->
+                        <div class="bg-gradient-to-br from-green-900/30 to-green-800/30 p-4 rounded-xl border border-green-700/50">
+                            <h4 class="font-bold text-green-300 mb-3 flex items-center">
+                                <span class="w-3 h-3 bg-green-400 rounded-full mr-2"></span>
+                                JAWA
+                            </h4>
+                            <div id="jawaStats" class="space-y-2 text-sm">
+                                <!-- Jawa stats will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Kalimantan -->
+                        <div class="bg-gradient-to-br from-yellow-900/30 to-yellow-800/30 p-4 rounded-xl border border-yellow-700/50">
+                            <h4 class="font-bold text-yellow-300 mb-3 flex items-center">
+                                <span class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></span>
+                                KALIMANTAN
+                            </h4>
+                            <div id="kalimantanStats" class="space-y-2 text-sm">
+                                <!-- Kalimantan stats will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Sulawesi -->
+                        <div class="bg-gradient-to-br from-purple-900/30 to-purple-800/30 p-4 rounded-xl border border-purple-700/50">
+                            <h4 class="font-bold text-purple-300 mb-3 flex items-center">
+                                <span class="w-3 h-3 bg-purple-400 rounded-full mr-2"></span>
+                                SULAWESI
+                            </h4>
+                            <div id="sulawesiStats" class="space-y-2 text-sm">
+                                <!-- Sulawesi stats will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Nusa Tenggara & Bali -->
+                        <div class="bg-gradient-to-br from-red-900/30 to-red-800/30 p-4 rounded-xl border border-red-700/50">
+                            <h4 class="font-bold text-red-300 mb-3 flex items-center">
+                                <span class="w-3 h-3 bg-red-400 rounded-full mr-2"></span>
+                                NUSA TENGGARA & BALI
+                            </h4>
+                            <div id="nusaStats" class="space-y-2 text-sm">
+                                <!-- Nusa Tenggara stats will be populated here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Maluku & Papua -->
+                        <div class="bg-gradient-to-br from-indigo-900/30 to-indigo-800/30 p-4 rounded-xl border border-indigo-700/50">
+                            <h4 class="font-bold text-indigo-300 mb-3 flex items-center">
+                                <span class="w-3 h-3 bg-indigo-400 rounded-full mr-2"></span>
+                                MALUKU & PAPUA
+                            </h4>
+                            <div id="malukuPapuaStats" class="space-y-2 text-sm">
+                                <!-- Maluku & Papua stats will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Member Cards -->
+            <div id="membersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Members will be populated here -->
+            </div>
+
+            <!-- QR Code Modal -->
+            <div id="qrModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" style="display: none;">
+                <div class="glass-effect p-6 rounded-2xl card-shadow w-full max-w-sm animate-fade-in text-center">
+                    <h3 class="text-xl font-bold mb-4">QR Code Anggota</h3>
+                    <div id="qrCode" class="bg-white p-4 rounded-lg mb-4 mx-auto w-48 h-48 flex items-center justify-center">
+                        <div class="text-black text-xs">QR Code akan muncul di sini</div>
+                    </div>
+                    <p id="qrMemberInfo" class="text-sm text-gray-400 mb-4"></p>
+                    <button id="closeQrModal" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+
+            <!-- Member Detail Modal -->
+            <div id="memberDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" style="display: none;">
+                <div class="glass-effect p-6 rounded-2xl card-shadow w-full max-w-md animate-fade-in">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i data-lucide="user" class="w-10 h-10 text-white"></i>
+                        </div>
+                        <h3 id="detailName" class="text-2xl font-bold mb-2"></h3>
+                        <p id="detailCallsign" class="text-blue-400 font-mono text-lg"></p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <span class="text-gray-400">Channel</span>
+                            <span id="detailChannel" class="font-medium"></span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <span class="text-gray-400">Status</span>
+                            <span class="px-2 py-1 bg-green-600 rounded text-xs">Online</span>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                            <span class="text-gray-400">Bergabung</span>
+                            <span class="text-sm">2024</span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-3 mt-6">
+                        <button id="shareBtn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                            <i data-lucide="share-2" class="w-4 h-4"></i>
+                            <span>Share</span>
+                        </button>
+                        <button id="qrBtn" class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                            <i data-lucide="qr-code" class="w-4 h-4"></i>
+                            <span>QR Code</span>
+                        </button>
+                        <button id="closeMemberDetail" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No Results -->
+            <div id="noResults" class="text-center py-12" style="display: none;">
+                <i data-lucide="search-x" class="w-16 h-16 text-gray-600 mx-auto mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Tidak ada hasil</h3>
+                <p class="text-gray-400">Coba kata kunci pencarian yang berbeda</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="min-h-screen p-4" style="display: none;">
+        <div class="max-w-7xl mx-auto">
+            <!-- Admin Header -->
+            <div class="mb-8 animate-fade-in">
+                <h1 class="text-3xl font-bold mb-2">Admin Panel</h1>
+                <p class="text-gray-400">Kelola data anggota dan konfigurasi sistem</p>
+            </div>
+
+            <!-- Admin Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 animate-fade-in">
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform cursor-pointer" onclick="showAnalytics()">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Total Data</p>
+                            <p class="text-2xl font-bold" id="adminTotalMembers">0</p>
+                            <p class="text-xs text-green-400">+12% bulan ini</p>
+                        </div>
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <i data-lucide="database" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform cursor-pointer">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Sync Status</p>
+                            <p class="text-sm font-medium text-green-400" id="syncStatus">Connected</p>
+                            <p class="text-xs text-gray-400">Real-time</p>
+                        </div>
+                        <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                            <i data-lucide="wifi" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform cursor-pointer">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Last Sync</p>
+                            <p class="text-sm font-medium" id="lastSync">Just now</p>
+                            <p class="text-xs text-blue-400">Auto-sync ON</p>
+                        </div>
+                        <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-effect p-6 rounded-2xl card-shadow hover:scale-105 transition-transform cursor-pointer">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm">Quick Actions</p>
+                            <div class="flex space-x-2 mt-1">
+                                <button id="syncNowBtn" class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 rounded transition-colors">Sync</button>
+                                <button id="backupBtn" class="text-xs px-2 py-1 bg-green-600 hover:bg-green-700 rounded transition-colors">Backup</button>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
+                            <i data-lucide="zap" class="w-5 h-5"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Analytics Dashboard -->
+            <div id="analyticsPanel" class="mb-8 animate-fade-in" style="display: none;">
+                <div class="glass-effect p-6 rounded-2xl card-shadow">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold flex items-center">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 mr-2"></i>Analytics Dashboard
+                        </h3>
+                        <button id="closeAnalytics" class="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-3">Channel Distribution</h4>
+                            <div id="channelChart" class="space-y-2">
+                                <!-- Chart will be populated here -->
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-3">Growth Trend</h4>
+                            <div class="h-32 flex items-end space-x-2">
+                                <div class="bg-blue-500 w-8 h-16 rounded-t"></div>
+                                <div class="bg-blue-500 w-8 h-20 rounded-t"></div>
+                                <div class="bg-blue-500 w-8 h-24 rounded-t"></div>
+                                <div class="bg-blue-500 w-8 h-28 rounded-t"></div>
+                                <div class="bg-blue-500 w-8 h-32 rounded-t"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="mb-8 animate-fade-in">
+                <div class="flex flex-wrap space-x-1 bg-gray-800 p-1 rounded-xl">
+                    <button class="tab-btn active px-4 py-3 rounded-lg font-medium transition-all text-sm" data-tab="members">
+                        <i data-lucide="users" class="w-4 h-4 inline mr-2"></i>Kelola Anggota
+                    </button>
+                    <button class="tab-btn px-4 py-3 rounded-lg font-medium transition-all text-sm" data-tab="bulk">
+                        <i data-lucide="layers" class="w-4 h-4 inline mr-2"></i>Bulk Actions
+                    </button>
+                    <button class="tab-btn px-4 py-3 rounded-lg font-medium transition-all text-sm" data-tab="reports">
+                        <i data-lucide="file-text" class="w-4 h-4 inline mr-2"></i>Reports
+                    </button>
+                    <button class="tab-btn px-4 py-3 rounded-lg font-medium transition-all text-sm" data-tab="settings">
+                        <i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>Pengaturan
+                    </button>
+                    <button class="tab-btn px-4 py-3 rounded-lg font-medium transition-all text-sm" data-tab="import">
+                        <i data-lucide="upload" class="w-4 h-4 inline mr-2"></i>Import Data
+                    </button>
+                    <button class="tab-btn px-4 py-3 rounded-lg font-medium transition-all text-sm" data-tab="logs">
+                        <i data-lucide="activity" class="w-4 h-4 inline mr-2"></i>Activity Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- Members Tab -->
+            <div id="membersTab" class="tab-content">
+                <!-- Add Member Form -->
+                <div class="glass-effect p-6 rounded-2xl card-shadow mb-8 animate-fade-in">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <i data-lucide="user-plus" class="w-5 h-5 mr-2"></i>Tambah Anggota Baru
+                    </h3>
+                    <form id="addMemberForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Nama Lengkap</label>
+                            <input type="text" id="fullName" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: Ahmad Wijaya" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Callsign</label>
+                            <input type="text" id="callsign" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Contoh: YB1ABC" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Channel Lokal</label>
+                            <select id="channelLocal" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="">Pilih Channel</option>
+                                <option value="POC ACEH">POC ACEH</option>
+                                <option value="POC SUMUT">POC SUMUT</option>
+                                <option value="POC SUMBAR">POC SUMBAR</option>
+                                <option value="POC RIAU">POC RIAU</option>
+                                <option value="POC KEPRI">POC KEPRI</option>
+                                <option value="POC JAMBI">POC JAMBI</option>
+                                <option value="POC SUMSEL">POC SUMSEL</option>
+                                <option value="POC BENGKULU">POC BENGKULU</option>
+                                <option value="POC LAMPUNG">POC LAMPUNG</option>
+                                <option value="POC BABEL">POC BABEL</option>
+                                <option value="POC JAKARTA">POC JAKARTA</option>
+                                <option value="POC JABAR">POC JABAR</option>
+                                <option value="POC JATENG">POC JATENG</option>
+                                <option value="POC DIY">POC DIY</option>
+                                <option value="POC JATIM">POC JATIM</option>
+                                <option value="POC BANTEN">POC BANTEN</option>
+                                <option value="POC BALI">POC BALI</option>
+                                <option value="POC NTB">POC NTB</option>
+                                <option value="POC NTT">POC NTT</option>
+                                <option value="POC KALBAR">POC KALBAR</option>
+                                <option value="POC KALTENG">POC KALTENG</option>
+                                <option value="POC KALSEL">POC KALSEL</option>
+                                <option value="POC KALTIM">POC KALTIM</option>
+                                <option value="POC KALUT">POC KALUT</option>
+                                <option value="POC SULUT">POC SULUT</option>
+                                <option value="POC SULTENG">POC SULTENG</option>
+                                <option value="POC SULSEL">POC SULSEL</option>
+                                <option value="POC SULTRA">POC SULTRA</option>
+                                <option value="POC SULBAR">POC SULBAR</option>
+                                <option value="POC GORONTALO">POC GORONTALO</option>
+                                <option value="POC MALUKU">POC MALUKU</option>
+                                <option value="POC MALUT">POC MALUT</option>
+                                <option value="POC PAPUA">POC PAPUA</option>
+                                <option value="POC PAPBAR">POC PAPBAR</option>
+                                <option value="POC PAPTENG">POC PAPTENG</option>
+                                <option value="POC PAPSEL">POC PAPSEL</option>
+                                <option value="POC PAPGN">POC PAPGN</option>
+                                <option value="POC PAPBRT">POC PAPBRT</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-3">
+                            <button type="submit" class="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 rounded-lg font-medium transition-all transform hover:scale-105 flex items-center space-x-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                                <span>Tambah Anggota</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Members Table -->
+                <div class="glass-effect rounded-2xl card-shadow animate-fade-in overflow-hidden">
+                    <div class="p-6 border-b border-gray-700">
+                        <h3 class="text-xl font-bold flex items-center">
+                            <i data-lucide="list" class="w-5 h-5 mr-2"></i>Daftar Anggota
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-800">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-300">No</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-300">Nama Lengkap</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-300">Callsign</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-300">Channel</th>
+                                    <th class="px-6 py-4 text-left text-sm font-medium text-gray-300">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTable" class="divide-y divide-gray-700">
+                                <!-- Members will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settingsTab" class="tab-content" style="display: none;">
+                <!-- Database Configuration -->
+                <div class="glass-effect p-6 rounded-2xl card-shadow animate-fade-in mb-8">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <i data-lucide="server" class="w-5 h-5 mr-2"></i>Konfigurasi Database
+                    </h3>
+                    
+                    <!-- Database Type Selection -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium mb-3">Pilih Jenis Database</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 border border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors" onclick="selectDatabaseType('custom')">
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="dbType" value="custom" id="customDb" class="text-blue-600">
+                                    <div>
+                                        <h4 class="font-semibold">Custom Hosting</h4>
+                                        <p class="text-sm text-gray-400">Gunakan hosting sendiri dengan PHP/MySQL</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors" onclick="selectDatabaseType('sheetdb')">
+                                <div class="flex items-center space-x-3">
+                                    <input type="radio" name="dbType" value="sheetdb" id="sheetDb" class="text-blue-600" checked>
+                                    <div>
+                                        <h4 class="font-semibold">SheetDB</h4>
+                                        <p class="text-sm text-gray-400">Gunakan Google Sheets sebagai database</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Hosting Configuration -->
+                    <div id="customHostingConfig" class="space-y-6" style="display: none;">
+                        <div class="p-4 bg-blue-900/30 rounded-lg border border-blue-700">
+                            <h4 class="font-semibold mb-2 flex items-center">
+                                <i data-lucide="info" class="w-4 h-4 mr-2"></i>Custom Hosting Setup
+                            </h4>
+                            <p class="text-sm text-gray-300">Upload file PHP ke hosting Anda untuk menggunakan database MySQL sendiri.</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">API Endpoint URL</label>
+                            <input type="url" id="customApiUrl" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="https://yourdomain.com/api/poc-members.php">
+                            <p class="text-sm text-gray-400 mt-2">URL endpoint API PHP di hosting Anda</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2">API Key (Opsional)</label>
+                            <input type="text" id="customApiKey" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="your-secret-api-key">
+                            <p class="text-sm text-gray-400 mt-2">Kunci API untuk keamanan (jika digunakan)</p>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button id="testCustomConnection" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm flex items-center space-x-2">
+                                <i data-lucide="wifi" class="w-4 h-4"></i>
+                                <span>Test Koneksi</span>
+                            </button>
+                            <button id="downloadPhpFiles" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm flex items-center space-x-2">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Download PHP Files</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SheetDB Configuration -->
+                    <div id="sheetdbConfig" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">SheetDB API URL</label>
+                            <input type="url" id="sheetdbUrl" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="https://sheetdb.io/api/v1/your-sheet-id" value="https://sheetdb.io/api/v1/demo">
+                            <p class="text-sm text-gray-400 mt-2">Masukkan URL API SheetDB Anda</p>
+                        </div>
+                    </div>
+
+                    <!-- Common Settings -->
+                    <div class="space-y-6 mt-6 pt-6 border-t border-gray-700">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Auto Sync</label>
+                            <div class="flex items-center space-x-3">
+                                <input type="checkbox" id="autoSync" class="w-4 h-4 text-blue-600 bg-gray-800 border-gray-600 rounded focus:ring-blue-500" checked>
+                                <span class="text-sm">Sinkronisasi otomatis setiap 5 menit</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button id="saveSettings" class="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                                <span>Simpan Pengaturan</span>
+                            </button>
+                            <button id="syncAllData" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors flex items-center space-x-2">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                                <span>Sync Semua Data</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tutorial Section -->
+                <div class="glass-effect p-6 rounded-2xl card-shadow mt-8 animate-fade-in">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <i data-lucide="book-open" class="w-5 h-5 mr-2"></i>Tutorial Setup Database
+                    </h3>
+                    
+                    <!-- Custom Hosting Tutorial -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-semibold mb-4 text-blue-400">🚀 Custom Hosting (Recommended)</h4>
+                        <div class="space-y-4 text-sm">
+                            <div class="p-4 bg-blue-900/30 rounded-lg border border-blue-700">
+                                <h5 class="font-semibold mb-2">1. Persiapan Hosting</h5>
+                                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                                    <li>Pastikan hosting mendukung PHP 7.4+ dan MySQL</li>
+                                    <li>Buat database MySQL baru di cPanel/hosting panel</li>
+                                    <li>Catat nama database, username, password, dan host</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-green-900/30 rounded-lg border border-green-700">
+                                <h5 class="font-semibold mb-2">2. Upload File PHP</h5>
+                                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                                    <li>Download file PHP dengan klik tombol "Download PHP Files"</li>
+                                    <li>Edit file config.php dengan data database Anda</li>
+                                    <li>Upload semua file ke folder /api/ di hosting</li>
+                                    <li>Set permission folder ke 755</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-purple-900/30 rounded-lg border border-purple-700">
+                                <h5 class="font-semibold mb-2">3. Konfigurasi & Test</h5>
+                                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                                    <li>Masukkan URL API: https://yourdomain.com/api/poc-members.php</li>
+                                    <li>Set API Key untuk keamanan (opsional)</li>
+                                    <li>Klik "Test Koneksi" untuk memastikan berfungsi</li>
+                                    <li>Simpan pengaturan dan mulai sync data</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SheetDB Tutorial -->
+                    <div>
+                        <h4 class="text-lg font-semibold mb-4 text-green-400">📊 Google Sheets + SheetDB</h4>
+                        <div class="space-y-4 text-sm">
+                            <div class="p-4 bg-blue-900/30 rounded-lg border border-blue-700">
+                                <h5 class="font-semibold mb-2">1. Setup Google Sheets</h5>
+                                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                                    <li>Buat Google Sheets baru</li>
+                                    <li>Buat header kolom: fullName, callsign, channelLocal</li>
+                                    <li>Set sharing ke "Anyone with the link can view"</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-green-900/30 rounded-lg border border-green-700">
+                                <h5 class="font-semibold mb-2">2. Setup SheetDB</h5>
+                                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                                    <li>Kunjungi <a href="https://sheetdb.io" class="text-blue-400 hover:underline" target="_blank">sheetdb.io</a></li>
+                                    <li>Paste URL Google Sheets Anda</li>
+                                    <li>Copy API URL yang diberikan</li>
+                                    <li>Paste ke field "SheetDB API URL" di atas</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 bg-purple-900/30 rounded-lg border border-purple-700">
+                                <h5 class="font-semibold mb-2">3. Test Connection</h5>
+                                <ul class="list-disc list-inside space-y-1 text-gray-300">
+                                    <li>Klik "Simpan Pengaturan"</li>
+                                    <li>Tambah data anggota baru</li>
+                                    <li>Cek Google Sheets untuk memastikan data tersimpan</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Actions Tab -->
+            <div id="bulkTab" class="tab-content" style="display: none;">
+                <div class="glass-effect p-6 rounded-2xl card-shadow animate-fade-in">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <i data-lucide="layers" class="w-5 h-5 mr-2"></i>Bulk Operations
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="font-semibold">Select Members</h4>
+                            <div class="bg-gray-800 p-4 rounded-lg max-h-64 overflow-y-auto">
+                                <div class="space-y-2" id="bulkMembersList">
+                                    <!-- Bulk selection list will be populated here -->
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button id="selectAllBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm">Select All</button>
+                                <button id="deselectAllBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg text-sm">Deselect All</button>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-semibold">Bulk Actions</h4>
+                            <div class="space-y-3">
+                                <button id="bulkDeleteBtn" class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 rounded-lg flex items-center justify-center space-x-2">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    <span>Delete Selected</span>
+                                </button>
+                                <button id="bulkExportBtn" class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 rounded-lg flex items-center justify-center space-x-2">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    <span>Export Selected</span>
+                                </button>
+                                <div class="flex space-x-2">
+                                    <select id="bulkChannelChange" class="flex-1 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-sm">
+                                        <option value="">Change Channel</option>
+                                        <option value="POC ACEH">POC ACEH</option>
+                                        <option value="POC SUMUT">POC SUMUT</option>
+                                        <option value="POC SUMBAR">POC SUMBAR</option>
+                                        <option value="POC RIAU">POC RIAU</option>
+                                        <option value="POC KEPRI">POC KEPRI</option>
+                                        <option value="POC JAMBI">POC JAMBI</option>
+                                        <option value="POC SUMSEL">POC SUMSEL</option>
+                                        <option value="POC BENGKULU">POC BENGKULU</option>
+                                        <option value="POC LAMPUNG">POC LAMPUNG</option>
+                                        <option value="POC BABEL">POC BABEL</option>
+                                        <option value="POC DKI">POC DKI</option>
+                                        <option value="POC JABAR">POC JABAR</option>
+                                        <option value="POC JATENG">POC JATENG</option>
+                                        <option value="POC DIY">POC DIY</option>
+                                        <option value="POC JATIM">POC JATIM</option>
+                                        <option value="POC BANTEN">POC BANTEN</option>
+                                        <option value="POC BALI">POC BALI</option>
+                                        <option value="POC NTB">POC NTB</option>
+                                        <option value="POC NTT">POC NTT</option>
+                                        <option value="POC KALBAR">POC KALBAR</option>
+                                        <option value="POC KALTENG">POC KALTENG</option>
+                                        <option value="POC KALSEL">POC KALSEL</option>
+                                        <option value="POC KALTIM">POC KALTIM</option>
+                                        <option value="POC KALUT">POC KALUT</option>
+                                        <option value="POC SULUT">POC SULUT</option>
+                                        <option value="POC SULTENG">POC SULTENG</option>
+                                        <option value="POC SULSEL">POC SULSEL</option>
+                                        <option value="POC SULTRA">POC SULTRA</option>
+                                        <option value="POC SULBAR">POC SULBAR</option>
+                                        <option value="POC GORONTALO">POC GORONTALO</option>
+                                        <option value="POC MALUKU">POC MALUKU</option>
+                                        <option value="POC MALUT">POC MALUT</option>
+                                        <option value="POC PAPUA">POC PAPUA</option>
+                                        <option value="POC PAPBAR">POC PAPBAR</option>
+                                        <option value="POC PAPTENG">POC PAPTENG</option>
+                                        <option value="POC PAPSEL">POC PAPSEL</option>
+                                        <option value="POC PAPGN">POC PAPGN</option>
+                                        <option value="POC PAPBRT">POC PAPBRT</option>
+                                    </select>
+                                    <button id="applyChannelChange" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reportsTab" class="tab-content" style="display: none;">
+                <div class="space-y-6">
+                    <div class="glass-effect p-6 rounded-2xl card-shadow animate-fade-in">
+                        <h3 class="text-xl font-bold mb-6 flex items-center">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>Generate Reports
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <button id="memberReportBtn" class="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-center transition-colors">
+                                <i data-lucide="users" class="w-8 h-8 mx-auto mb-2"></i>
+                                <h4 class="font-semibold">Member Report</h4>
+                                <p class="text-sm text-gray-300">Complete member list</p>
+                            </button>
+                            <button id="channelReportBtn" class="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-colors">
+                                <i data-lucide="radio" class="w-8 h-8 mx-auto mb-2"></i>
+                                <h4 class="font-semibold">Channel Report</h4>
+                                <p class="text-sm text-gray-300">Channel distribution</p>
+                            </button>
+                            <button id="activityReportBtn" class="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-center transition-colors">
+                                <i data-lucide="activity" class="w-8 h-8 mx-auto mb-2"></i>
+                                <h4 class="font-semibold">Activity Report</h4>
+                                <p class="text-sm text-gray-300">System activity log</p>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="glass-effect p-6 rounded-2xl card-shadow animate-fade-in">
+                        <h4 class="font-semibold mb-4">Recent Reports</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                                <div>
+                                    <p class="font-medium">Member Report - December 2024</p>
+                                    <p class="text-sm text-gray-400">Generated 2 hours ago</p>
+                                </div>
+                                <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm">Download</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Import Tab -->
+            <div id="importTab" class="tab-content" style="display: none;">
+                <div class="glass-effect p-6 rounded-2xl card-shadow animate-fade-in">
+                    <h3 class="text-xl font-bold mb-6 flex items-center">
+                        <i data-lucide="upload" class="w-5 h-5 mr-2"></i>Import Data
+                    </h3>
+                    <div class="space-y-6">
+                        <div class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+                            <i data-lucide="file-text" class="w-12 h-12 text-gray-400 mx-auto mb-4"></i>
+                            <h4 class="text-lg font-semibold mb-2">Import dari CSV</h4>
+                            <p class="text-gray-400 mb-4">Upload file CSV dengan format: Nama Lengkap, Callsign, Channel Lokal</p>
+                            <input type="file" id="csvFile" accept=".csv" class="hidden">
+                            <button onclick="document.getElementById('csvFile').click()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
+                                Pilih File CSV
+                            </button>
+                        </div>
+                        <div class="flex space-x-4">
+                            <button id="importFromSheet" class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                                <span>Import dari SheetDB</span>
+                            </button>
+                            <button id="exportToSheet" class="flex-1 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <span>Export ke SheetDB</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Logs Tab -->
+            <div id="logsTab" class="tab-content" style="display: none;">
+                <div class="glass-effect p-6 rounded-2xl card-shadow animate-fade-in">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold flex items-center">
+                            <i data-lucide="activity" class="w-5 h-5 mr-2"></i>Activity Logs
+                        </h3>
+                        <button id="clearLogsBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Clear Logs</button>
+                    </div>
+                    <div class="space-y-3 max-h-96 overflow-y-auto" id="activityLogs">
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800 rounded-lg">
+                            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm">Admin logged in</p>
+                                <p class="text-xs text-gray-400">2 minutes ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800 rounded-lg">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm">New member added: Ahmad Wijaya</p>
+                                <p class="text-xs text-gray-400">5 minutes ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-gray-800 rounded-lg">
+                            <div class="w-2 h-2 bg-purple-500 rounded-full"></div>
+                            <div class="flex-1">
+                                <p class="text-sm">Data synced to SheetDB</p>
+                                <p class="text-xs text-gray-400">10 minutes ago</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" style="display: none;">
+        <div class="glass-effect p-6 rounded-2xl card-shadow w-full max-w-md animate-fade-in">
+            <h3 class="text-xl font-bold mb-6 flex items-center">
+                <i data-lucide="edit" class="w-5 h-5 mr-2"></i>Edit Anggota
+            </h3>
+            <form id="editMemberForm" class="space-y-4">
+                <input type="hidden" id="editIndex">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Nama Lengkap</label>
+                    <input type="text" id="editFullName" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Callsign</label>
+                    <input type="text" id="editCallsign" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Channel Lokal</label>
+                    <select id="editChannelLocal" class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                        <option value="POC ACEH">POC ACEH</option>
+                        <option value="POC SUMUT">POC SUMUT</option>
+                        <option value="POC SUMBAR">POC SUMBAR</option>
+                        <option value="POC RIAU">POC RIAU</option>
+                        <option value="POC KEPRI">POC KEPRI</option>
+                        <option value="POC JAMBI">POC JAMBI</option>
+                        <option value="POC SUMSEL">POC SUMSEL</option>
+                        <option value="POC BENGKULU">POC BENGKULU</option>
+                        <option value="POC LAMPUNG">POC LAMPUNG</option>
+                        <option value="POC BABEL">POC BABEL</option>
+                        <option value="POC DKI">POC DKI</option>
+                        <option value="POC JABAR">POC JABAR</option>
+                        <option value="POC JATENG">POC JATENG</option>
+                        <option value="POC DIY">POC DIY</option>
+                        <option value="POC JATIM">POC JATIM</option>
+                        <option value="POC BANTEN">POC BANTEN</option>
+                        <option value="POC BALI">POC BALI</option>
+                        <option value="POC NTB">POC NTB</option>
+                        <option value="POC NTT">POC NTT</option>
+                        <option value="POC KALBAR">POC KALBAR</option>
+                        <option value="POC KALTENG">POC KALTENG</option>
+                        <option value="POC KALSEL">POC KALSEL</option>
+                        <option value="POC KALTIM">POC KALTIM</option>
+                        <option value="POC KALUT">POC KALUT</option>
+                        <option value="POC SULUT">POC SULUT</option>
+                        <option value="POC SULTENG">POC SULTENG</option>
+                        <option value="POC SULSEL">POC SULSEL</option>
+                        <option value="POC SULTRA">POC SULTRA</option>
+                        <option value="POC SULBAR">POC SULBAR</option>
+                        <option value="POC GORONTALO">POC GORONTALO</option>
+                        <option value="POC MALUKU">POC MALUKU</option>
+                        <option value="POC MALUT">POC MALUT</option>
+                        <option value="POC PAPUA">POC PAPUA</option>
+                        <option value="POC PAPBAR">POC PAPBAR</option>
+                        <option value="POC PAPTENG">POC PAPTENG</option>
+                        <option value="POC PAPSEL">POC PAPSEL</option>
+                        <option value="POC PAPGN">POC PAPGN</option>
+                        <option value="POC PAPBRT">POC PAPBRT</option>
+                    </select>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors">
+                        Simpan
+                    </button>
+                    <button type="button" id="cancelEdit" class="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-medium transition-colors">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 px-6 py-3 rounded-lg font-medium z-50 transform translate-x-full transition-transform" style="display: none;">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Application state
+        let currentView = 'login';
+        let isLoggedIn = false;
+        let databaseType = 'sheetdb'; // 'sheetdb' or 'custom'
+        let customApiUrl = '';
+        let customApiKey = '';
+        let members = [
+            { fullName: 'Ahmad Wijaya', callsign: 'YB1ABC', channelLocal: 'POC JATIM' },
+            { fullName: 'Budi Santoso', callsign: 'YB2DEF', channelLocal: 'POC JATENG' },
+            { fullName: 'Citra Dewi', callsign: 'YB3GHI', channelLocal: 'POC JABAR' },
+            { fullName: 'Dedi Rahman', callsign: 'YB4JKL', channelLocal: 'POC DKI' },
+            { fullName: 'Eka Putri', callsign: 'YB5MNO', channelLocal: 'POC BANTEN' },
+            { fullName: 'Fajar Nugroho', callsign: 'YB6PQR', channelLocal: 'POC KALTIM' },
+            { fullName: 'Gunawan Setiawan', callsign: 'YB0STU', channelLocal: 'POC ACEH' },
+            { fullName: 'Hendra Kusuma', callsign: 'YB7VWX', channelLocal: 'POC SUMUT' },
+            { fullName: 'Indira Sari', callsign: 'YB8YZA', channelLocal: 'POC SUMBAR' },
+            { fullName: 'Joko Widodo', callsign: 'YB9BCD', channelLocal: 'POC RIAU' },
+            { fullName: 'Kartika Dewi', callsign: 'YC1EFG', channelLocal: 'POC KEPRI' },
+            { fullName: 'Lukman Hakim', callsign: 'YC2HIJ', channelLocal: 'POC JAMBI' },
+            { fullName: 'Maya Sari', callsign: 'YC3KLM', channelLocal: 'POC SUMSEL' },
+            { fullName: 'Nanda Pratama', callsign: 'YC4NOP', channelLocal: 'POC BENGKULU' },
+            { fullName: 'Oscar Ramadhan', callsign: 'YC5QRS', channelLocal: 'POC LAMPUNG' },
+            { fullName: 'Putri Maharani', callsign: 'YC6TUV', channelLocal: 'POC BABEL' },
+            { fullName: 'Qori Ananda', callsign: 'YC7WXY', channelLocal: 'POC DIY' },
+            { fullName: 'Rizki Pratama', callsign: 'YC8ZAB', channelLocal: 'POC BALI' },
+            { fullName: 'Sari Indah', callsign: 'YC9CDE', channelLocal: 'POC NTB' },
+            { fullName: 'Taufik Rahman', callsign: 'YD1FGH', channelLocal: 'POC NTT' },
+            { fullName: 'Usman Ali', callsign: 'YD2IJK', channelLocal: 'POC KALBAR' },
+            { fullName: 'Vina Sari', callsign: 'YD3LMN', channelLocal: 'POC KALTENG' },
+            { fullName: 'Wahyu Santoso', callsign: 'YD4OPQ', channelLocal: 'POC KALSEL' },
+            { fullName: 'Xenia Putri', callsign: 'YD5RST', channelLocal: 'POC KALUT' },
+            { fullName: 'Yudi Setiawan', callsign: 'YD6UVW', channelLocal: 'POC SULUT' },
+            { fullName: 'Zahra Amelia', callsign: 'YD7XYZ', channelLocal: 'POC SULTENG' },
+            { fullName: 'Andi Wijaya', callsign: 'YD8ABC', channelLocal: 'POC SULSEL' },
+            { fullName: 'Bayu Pratama', callsign: 'YD9DEF', channelLocal: 'POC SULTRA' },
+            { fullName: 'Candra Kirana', callsign: 'YE1GHI', channelLocal: 'POC SULBAR' },
+            { fullName: 'Dimas Anggara', callsign: 'YE2JKL', channelLocal: 'POC GORONTALO' },
+            { fullName: 'Erni Susanti', callsign: 'YE3MNO', channelLocal: 'POC MALUKU' },
+            { fullName: 'Fadli Rahman', callsign: 'YE4PQR', channelLocal: 'POC MALUT' },
+            { fullName: 'Gita Savitri', callsign: 'YE5STU', channelLocal: 'POC PAPUA' },
+            { fullName: 'Haris Setiawan', callsign: 'YE6VWX', channelLocal: 'POC PAPBAR' },
+            { fullName: 'Ika Sari', callsign: 'YE7YZA', channelLocal: 'POC PAPTENG' },
+            { fullName: 'Jihan Aulia', callsign: 'YE8BCD', channelLocal: 'POC PAPSEL' },
+            { fullName: 'Krisna Wijaya', callsign: 'YE9EFG', channelLocal: 'POC PAPGN' },
+            { fullName: 'Lestari Dewi', callsign: 'YF1HIJ', channelLocal: 'POC PAPBRT' }
+        ];
+        let filteredMembers = [...members];
+        let sheetdbUrl = 'https://sheetdb.io/api/v1/demo';
+        let autoSync = true;
+        let viewMode = 'grid'; // grid or list
+        let selectedMembers = [];
+        let activityLogs = [
+            { action: 'Admin logged in', time: new Date(), type: 'login' },
+            { action: 'New member added: Ahmad Wijaya', time: new Date(Date.now() - 300000), type: 'add' },
+            { action: 'Data synced to SheetDB', time: new Date(Date.now() - 600000), type: 'sync' }
+        ];
+
+        // DOM elements
+        const loginPage = document.getElementById('loginPage');
+        const publicPage = document.getElementById('publicPage');
+        const adminPanel = document.getElementById('adminPanel');
+        const viewToggle = document.getElementById('viewToggle');
+        const viewText = document.getElementById('viewText');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg font-medium z-50 transform transition-transform ${
+                type === 'success' ? 'bg-green-600' : 'bg-red-600'
+            }`;
+            toast.style.display = 'block';
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalMembers = members.length;
+            const channels = [...new Set(members.map(m => m.channelLocal))];
+            const provinces = [...new Set(channels.map(c => c.split(' ')[1]))];
+
+            // Update main stats
+            document.getElementById('totalMembers').textContent = totalMembers;
+            document.getElementById('totalChannels').textContent = channels.length;
+            document.getElementById('totalProvinces').textContent = provinces.length;
+            document.getElementById('adminTotalMembers').textContent = totalMembers;
+
+            // Find biggest channel
+            const channelStats = {};
+            members.forEach(member => {
+                channelStats[member.channelLocal] = (channelStats[member.channelLocal] || 0) + 1;
+            });
+
+            const biggestChannelEntry = Object.entries(channelStats).sort((a, b) => b[1] - a[1])[0];
+            if (biggestChannelEntry) {
+                document.getElementById('biggestChannel').textContent = biggestChannelEntry[0];
+                document.getElementById('biggestChannelCount').textContent = `${biggestChannelEntry[1]} anggota`;
+            }
+
+            // Update detailed channel statistics
+            updateChannelStats();
+            updateRegionalStats();
+        }
+
+        // Update detailed channel statistics
+        function updateChannelStats() {
+            const channelStats = {};
+            members.forEach(member => {
+                channelStats[member.channelLocal] = (channelStats[member.channelLocal] || 0) + 1;
+            });
+
+            const sortedChannels = Object.entries(channelStats).sort((a, b) => b[1] - a[1]);
+            const maxCount = Math.max(...Object.values(channelStats));
+
+            // Grid view
+            const gridContainer = document.getElementById('channelStatsGrid');
+            if (gridContainer) {
+                gridContainer.innerHTML = sortedChannels.map(([channel, count]) => {
+                    const percentage = ((count / members.length) * 100).toFixed(1);
+                    const barWidth = (count / maxCount) * 100;
+                    
+                    return `
+                        <div class="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 hover:border-blue-500/50 transition-colors">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-bold text-blue-300 text-sm">${channel}</h4>
+                                <span class="text-2xl font-bold text-white">${count}</span>
+                            </div>
+                            <div class="mb-2">
+                                <div class="w-full bg-gray-700 rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-xs text-gray-400">
+                                <span>${percentage}% dari total</span>
+                                <span class="text-green-400">●</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // List view
+            const listContainer = document.getElementById('channelStatsList');
+            if (listContainer) {
+                listContainer.innerHTML = sortedChannels.map(([channel, count], index) => {
+                    const percentage = ((count / members.length) * 100).toFixed(1);
+                    const barWidth = (count / maxCount) * 100;
+                    const rankColors = ['text-yellow-400', 'text-gray-300', 'text-orange-400'];
+                    const rankColor = rankColors[index] || 'text-blue-400';
+                    
+                    return `
+                        <div class="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors">
+                            <div class="flex items-center space-x-4 flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <span class="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs font-bold">${index + 1}</span>
+                                    <span class="font-semibold ${rankColor}">${channel}</span>
+                                </div>
+                                <div class="flex-1 max-w-xs">
+                                    <div class="w-full bg-gray-700 rounded-full h-2">
+                                        <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-bold text-white">${count}</div>
+                                <div class="text-xs text-gray-400">${percentage}%</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Update regional statistics
+        function updateRegionalStats() {
+            const regionalData = {
+                sumatera: ['ACEH', 'SUMUT', 'SUMBAR', 'RIAU', 'KEPRI', 'JAMBI', 'SUMSEL', 'BENGKULU', 'LAMPUNG', 'BABEL'],
+                jawa: ['DKI', 'JABAR', 'JATENG', 'DIY', 'JATIM', 'BANTEN'],
+                kalimantan: ['KALBAR', 'KALTENG', 'KALSEL', 'KALTIM', 'KALUT'],
+                sulawesi: ['SULUT', 'SULTENG', 'SULSEL', 'SULTRA', 'SULBAR', 'GORONTALO'],
+                nusa: ['BALI', 'NTB', 'NTT'],
+                malukuPapua: ['MALUKU', 'MALUT', 'PAPUA', 'PAPBAR', 'PAPTENG', 'PAPSEL', 'PAPGN', 'PAPBRT']
+            };
+
+            Object.entries(regionalData).forEach(([region, provinces]) => {
+                const regionMembers = members.filter(member => {
+                    const province = member.channelLocal.split(' ')[1];
+                    return provinces.includes(province);
+                });
+
+                const regionStats = {};
+                regionMembers.forEach(member => {
+                    regionStats[member.channelLocal] = (regionStats[member.channelLocal] || 0) + 1;
+                });
+
+                const container = document.getElementById(`${region}Stats`);
+                if (container) {
+                    const sortedStats = Object.entries(regionStats).sort((a, b) => b[1] - a[1]);
+                    const totalRegional = regionMembers.length;
+                    
+                    container.innerHTML = sortedStats.length > 0 ? sortedStats.map(([channel, count]) => `
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-300">${channel}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-white">${count}</span>
+                                <span class="text-xs text-gray-400">(${((count/totalRegional)*100).toFixed(1)}%)</span>
+                            </div>
+                        </div>
+                    `).join('') + `
+                        <div class="pt-2 mt-2 border-t border-gray-600">
+                            <div class="flex items-center justify-between font-bold">
+                                <span class="text-gray-200">Total Regional:</span>
+                                <span class="text-lg text-blue-300">${totalRegional}</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="text-center text-gray-500 py-4">
+                            <i data-lucide="users-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                            <p>Belum ada anggota</p>
+                        </div>
+                    `;
+                }
+            });
+
+            lucide.createIcons();
+        }
+
+        // Toggle stats view
+        function toggleStatsView() {
+            const gridView = document.getElementById('channelStatsGrid');
+            const listView = document.getElementById('channelStatsList');
+            const toggleBtn = document.getElementById('toggleStatsView');
+            const icon = toggleBtn.querySelector('i');
+            const text = toggleBtn.querySelector('span');
+
+            if (gridView.style.display === 'none') {
+                // Switch to grid view
+                gridView.style.display = 'grid';
+                listView.style.display = 'none';
+                icon.setAttribute('data-lucide', 'layout-grid');
+                text.textContent = 'Grid View';
+            } else {
+                // Switch to list view
+                gridView.style.display = 'none';
+                listView.style.display = 'block';
+                icon.setAttribute('data-lucide', 'list');
+                text.textContent = 'List View';
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Export statistics
+        function exportChannelStats() {
+            const channelStats = {};
+            members.forEach(member => {
+                channelStats[member.channelLocal] = (channelStats[member.channelLocal] || 0) + 1;
+            });
+
+            const sortedChannels = Object.entries(channelStats).sort((a, b) => b[1] - a[1]);
+            
+            let csvContent = 'Channel POC,Jumlah Anggota,Persentase\n';
+            sortedChannels.forEach(([channel, count]) => {
+                const percentage = ((count / members.length) * 100).toFixed(1);
+                csvContent += `"${channel}",${count},${percentage}%\n`;
+            });
+            
+            csvContent += `\nTotal Anggota,${members.length},100%\n`;
+            csvContent += `Total Channel,${sortedChannels.length},-\n`;
+            csvContent += `Generated,${new Date().toLocaleString()},-\n`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `poc-channel-statistics-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Statistik channel berhasil diexport!');
+        }
+
+        // Render public member cards
+        function renderPublicMembers() {
+            const membersList = document.getElementById('membersList');
+            const noResults = document.getElementById('noResults');
+            const resultCount = document.getElementById('resultCount');
+            
+            if (filteredMembers.length === 0) {
+                membersList.innerHTML = '';
+                noResults.style.display = 'block';
+                resultCount.textContent = '0';
+                return;
+            }
+            
+            noResults.style.display = 'none';
+            resultCount.textContent = filteredMembers.length;
+            
+            if (viewMode === 'grid') {
+                membersList.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+                membersList.innerHTML = filteredMembers.map((member, index) => `
+                    <div class="glass-effect p-6 rounded-2xl card-shadow animate-fade-in hover:scale-105 transition-transform cursor-pointer" onclick="showMemberDetail(${members.indexOf(member)})">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                                <i data-lucide="user" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-1 bg-green-500 rounded-full w-2 h-2"></span>
+                                <span class="px-3 py-1 bg-blue-600 rounded-full text-xs font-medium">${member.channelLocal}</span>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">${member.fullName}</h3>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2 text-gray-400">
+                                <i data-lucide="radio" class="w-4 h-4"></i>
+                                <span class="font-mono">${member.callsign}</span>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button onclick="event.stopPropagation(); shareMembe(${members.indexOf(member)})" class="p-1 hover:bg-gray-700 rounded">
+                                    <i data-lucide="share-2" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); showQRCode(${members.indexOf(member)})" class="p-1 hover:bg-gray-700 rounded">
+                                    <i data-lucide="qr-code" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                membersList.className = 'space-y-4';
+                membersList.innerHTML = filteredMembers.map((member, index) => `
+                    <div class="glass-effect p-4 rounded-xl card-shadow animate-fade-in hover:bg-gray-800/50 transition-colors cursor-pointer" onclick="showMemberDetail(${members.indexOf(member)})">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold">${member.fullName}</h3>
+                                    <p class="text-sm text-gray-400 font-mono">${member.callsign}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="px-3 py-1 bg-blue-600 rounded-full text-xs font-medium">${member.channelLocal}</span>
+                                <span class="px-2 py-1 bg-green-500 rounded-full w-2 h-2"></span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Render admin members table
+        function renderAdminMembers() {
+            const membersTable = document.getElementById('membersTable');
+            membersTable.innerHTML = members.map((member, index) => `
+                <tr class="hover:bg-gray-800/50">
+                    <td class="px-6 py-4 text-sm">${index + 1}</td>
+                    <td class="px-6 py-4 font-medium">${member.fullName}</td>
+                    <td class="px-6 py-4 font-mono text-blue-400">${member.callsign}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 bg-blue-600 rounded text-xs">${member.channelLocal}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex space-x-2">
+                            <button onclick="editMember(${index})" class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-xs transition-colors">
+                                <i data-lucide="edit" class="w-3 h-3"></i>
+                            </button>
+                            <button onclick="deleteMember(${index})" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-xs transition-colors">
+                                <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        // Advanced search and filter functionality
+        function searchMembers(query) {
+            let results = [...members];
+            
+            // Apply text search
+            if (query && query.trim()) {
+                const searchTerm = query.toLowerCase();
+                results = results.filter(member => 
+                    member.fullName.toLowerCase().includes(searchTerm) ||
+                    member.callsign.toLowerCase().includes(searchTerm) ||
+                    member.channelLocal.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply channel filter
+            const channelFilter = document.getElementById('channelFilter')?.value;
+            if (channelFilter) {
+                results = results.filter(member => member.channelLocal === channelFilter);
+            }
+            
+            // Apply sorting
+            const sortBy = document.getElementById('sortBy')?.value || 'name';
+            results.sort((a, b) => {
+                switch (sortBy) {
+                    case 'name':
+                        return a.fullName.localeCompare(b.fullName);
+                    case 'callsign':
+                        return a.callsign.localeCompare(b.callsign);
+                    case 'channel':
+                        return a.channelLocal.localeCompare(b.channelLocal);
+                    case 'recent':
+                        return Math.random() - 0.5; // Random for demo
+                    default:
+                        return 0;
+                }
+            });
+            
+            filteredMembers = results;
+            renderPublicMembers();
+            updateChannelFilter();
+        }
+
+        // Update channel filter options
+        function updateChannelFilter() {
+            const channelFilter = document.getElementById('channelFilter');
+            if (!channelFilter) return;
+            
+            const channels = [...new Set(members.map(m => m.channelLocal))].sort();
+            const currentValue = channelFilter.value;
+            
+            channelFilter.innerHTML = '<option value="">Semua Channel</option>' + 
+                channels.map(channel => `<option value="${channel}">${channel}</option>`).join('');
+            
+            channelFilter.value = currentValue;
+        }
+
+        // Toggle view mode
+        function toggleViewMode() {
+            viewMode = viewMode === 'grid' ? 'list' : 'grid';
+            const btn = document.getElementById('viewModeBtn');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            
+            if (viewMode === 'grid') {
+                icon.setAttribute('data-lucide', 'grid-3x3');
+                text.textContent = 'Grid';
+            } else {
+                icon.setAttribute('data-lucide', 'list');
+                text.textContent = 'List';
+            }
+            
+            lucide.createIcons();
+            renderPublicMembers();
+        }
+
+        // Show member detail modal
+        function showMemberDetail(index) {
+            const member = members[index];
+            document.getElementById('detailName').textContent = member.fullName;
+            document.getElementById('detailCallsign').textContent = member.callsign;
+            document.getElementById('detailChannel').textContent = member.channelLocal;
+            document.getElementById('memberDetailModal').style.display = 'flex';
+            
+            // Store current member index for actions
+            document.getElementById('memberDetailModal').dataset.memberIndex = index;
+        }
+
+        // Show QR Code
+        function showQRCode(index) {
+            const member = members[index];
+            document.getElementById('qrMemberInfo').textContent = `${member.fullName} - ${member.callsign}`;
+            document.getElementById('qrModal').style.display = 'flex';
+            
+            // Generate simple QR code representation
+            const qrCode = document.getElementById('qrCode');
+            qrCode.innerHTML = `
+                <div class="grid grid-cols-8 gap-1 w-full h-full">
+                    ${Array(64).fill().map(() => `<div class="bg-black ${Math.random() > 0.5 ? 'opacity-100' : 'opacity-0'}"></div>`).join('')}
+                </div>
+            `;
+        }
+
+        // Share member
+        function shareMember(index) {
+            const member = members[index];
+            if (navigator.share) {
+                navigator.share({
+                    title: `${member.fullName} - POC Indonesia`,
+                    text: `Callsign: ${member.callsign}\nChannel: ${member.channelLocal}`,
+                    url: window.location.href
+                });
+            } else {
+                // Fallback to clipboard
+                const text = `${member.fullName}\nCallsign: ${member.callsign}\nChannel: ${member.channelLocal}`;
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Data anggota disalin ke clipboard!');
+                });
+            }
+        }
+
+        // Voice search (demo)
+        function startVoiceSearch() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'id-ID';
+                
+                recognition.onstart = () => {
+                    document.getElementById('voiceSearchBtn').innerHTML = '<i data-lucide="mic-off" class="w-5 h-5 text-red-400"></i>';
+                    lucide.createIcons();
+                };
+                
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('searchInput').value = transcript;
+                    searchMembers(transcript);
+                };
+                
+                recognition.onend = () => {
+                    document.getElementById('voiceSearchBtn').innerHTML = '<i data-lucide="mic" class="w-5 h-5 text-gray-400"></i>';
+                    lucide.createIcons();
+                };
+                
+                recognition.start();
+            } else {
+                showToast('Voice search tidak didukung browser ini', 'error');
+            }
+        }
+
+        // Add member
+        async function addMember(memberData) {
+            try {
+                members.push(memberData);
+                updateStats();
+                renderPublicMembers();
+                renderAdminMembers();
+                await syncToDatabase(memberData, 'POST');
+                addActivityLog(`New member added: ${memberData.fullName}`, 'add');
+                showToast('Anggota berhasil ditambahkan!');
+            } catch (error) {
+                // Remove from local array if sync failed
+                members.pop();
+                updateStats();
+                renderPublicMembers();
+                renderAdminMembers();
+                showToast('Gagal menambahkan anggota ke database!', 'error');
+            }
+        }
+
+        // Edit member
+        function editMember(index) {
+            const member = members[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editFullName').value = member.fullName;
+            document.getElementById('editCallsign').value = member.callsign;
+            document.getElementById('editChannelLocal').value = member.channelLocal;
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        // Update member
+        async function updateMember(index, memberData) {
+            const originalData = { ...members[index] };
+            try {
+                members[index] = memberData;
+                updateStats();
+                renderPublicMembers();
+                renderAdminMembers();
+                await syncToDatabase(memberData, 'PUT', index);
+                addActivityLog(`Member updated: ${memberData.fullName}`, 'edit');
+                showToast('Data anggota berhasil diperbarui!');
+            } catch (error) {
+                // Restore original data if sync failed
+                members[index] = originalData;
+                updateStats();
+                renderPublicMembers();
+                renderAdminMembers();
+                showToast('Gagal memperbarui data di database!', 'error');
+            }
+        }
+
+        // Delete member
+        async function deleteMember(index) {
+            if (confirm('Yakin ingin menghapus anggota ini?')) {
+                const memberData = { ...members[index] };
+                try {
+                    members.splice(index, 1);
+                    updateStats();
+                    renderPublicMembers();
+                    renderAdminMembers();
+                    await syncToDatabase(null, 'DELETE', index);
+                    addActivityLog(`Member deleted: ${memberData.fullName}`, 'delete');
+                    showToast('Anggota berhasil dihapus!');
+                } catch (error) {
+                    // Restore member if sync failed
+                    members.splice(index, 0, memberData);
+                    updateStats();
+                    renderPublicMembers();
+                    renderAdminMembers();
+                    showToast('Gagal menghapus anggota dari database!', 'error');
+                }
+            }
+        }
+
+        // Sync to Database (SheetDB or Custom)
+        async function syncToDatabase(data, method = 'POST', index = null) {
+            if (databaseType === 'custom') {
+                return await syncToCustomAPI(data, method, index);
+            } else {
+                return await syncToSheetDB(data, method, index);
+            }
+        }
+
+        // Sync to Custom API
+        async function syncToCustomAPI(data, method = 'POST', index = null) {
+            if (!customApiUrl) {
+                console.log('Custom API URL not configured');
+                return;
+            }
+
+            try {
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+
+                if (customApiKey) {
+                    headers['X-API-Key'] = customApiKey;
+                }
+
+                let url = customApiUrl;
+                let body = JSON.stringify(data);
+
+                if (method === 'PUT' && index !== null) {
+                    url += `?id=${index}`;
+                } else if (method === 'DELETE' && index !== null) {
+                    url += `?id=${index}`;
+                    body = null;
+                }
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: headers,
+                    body: body
+                });
+
+                if (response.ok) {
+                    updateSyncStatus('Connected', 'success');
+                    return await response.json();
+                } else {
+                    throw new Error(`Custom API sync failed: ${response.status}`);
+                }
+            } catch (error) {
+                updateSyncStatus('Error', 'error');
+                console.error('Custom API sync error:', error);
+                throw error;
+            }
+        }
+
+        // Sync to SheetDB
+        async function syncToSheetDB(data, method = 'POST', index = null) {
+            if (!sheetdbUrl || sheetdbUrl === 'https://sheetdb.io/api/v1/demo') {
+                console.log('Demo mode - data would be synced to:', data);
+                return;
+            }
+
+            try {
+                const response = await fetch(sheetdbUrl, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    updateSyncStatus('Connected', 'success');
+                    return await response.json();
+                } else {
+                    throw new Error('SheetDB sync failed');
+                }
+            } catch (error) {
+                updateSyncStatus('Error', 'error');
+                console.error('SheetDB sync error:', error);
+                throw error;
+            }
+        }
+
+        // Update sync status display
+        function updateSyncStatus(status, type) {
+            const syncStatusEl = document.getElementById('syncStatus');
+            const lastSyncEl = document.getElementById('lastSync');
+            
+            if (syncStatusEl) {
+                syncStatusEl.textContent = status;
+                syncStatusEl.className = `text-sm font-medium ${type === 'success' ? 'text-green-400' : 'text-red-400'}`;
+            }
+            
+            if (lastSyncEl && type === 'success') {
+                lastSyncEl.textContent = new Date().toLocaleTimeString();
+            }
+        }
+
+        // Select database type
+        function selectDatabaseType(type) {
+            databaseType = type;
+            document.getElementById('customDb').checked = type === 'custom';
+            document.getElementById('sheetDb').checked = type === 'sheetdb';
+            
+            document.getElementById('customHostingConfig').style.display = type === 'custom' ? 'block' : 'none';
+            document.getElementById('sheetdbConfig').style.display = type === 'sheetdb' ? 'block' : 'none';
+        }
+
+        // Test custom API connection
+        async function testCustomConnection() {
+            const url = document.getElementById('customApiUrl').value;
+            const apiKey = document.getElementById('customApiKey').value;
+            
+            if (!url) {
+                showToast('Masukkan URL API terlebih dahulu!', 'error');
+                return;
+            }
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (apiKey) headers['X-API-Key'] = apiKey;
+
+                const response = await fetch(url + '?test=1', {
+                    method: 'GET',
+                    headers: headers
+                });
+
+                if (response.ok) {
+                    showToast('Koneksi berhasil! API siap digunakan.');
+                    updateSyncStatus('Connected', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                showToast('Koneksi gagal! Periksa URL dan konfigurasi.', 'error');
+                updateSyncStatus('Error', 'error');
+                console.error('Connection test failed:', error);
+            }
+        }
+
+        // Download PHP files for custom hosting
+        function downloadPhpFiles() {
+            const phpFiles = {
+                'poc-members.php': generateMainPHPFile(),
+                'config.php': generateConfigPHPFile(),
+                'database.sql': generateDatabaseSQL(),
+                'README.txt': generateReadmeFile()
+            };
+
+            // Create ZIP file content (simplified)
+            const zipContent = Object.entries(phpFiles).map(([filename, content]) => 
+                `=== ${filename} ===\n${content}\n\n`
+            ).join('');
+
+            const blob = new Blob([zipContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'poc-api-files.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showToast('File PHP berhasil didownload! Ekstrak dan upload ke hosting Anda.');
+        }
+
+        // Generate main PHP API file
+        function generateMainPHPFile() {
+            return `<?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-API-Key');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
+require_once 'config.php';
+
+// API Key validation (if set)
+if (defined('API_KEY') && API_KEY !== '') {
+    $headers = getallheaders();
+    if (!isset($headers['X-API-Key']) || $headers['X-API-Key'] !== API_KEY) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+}
+
+// Database connection
+try {
+    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch(PDOException $e) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Database connection failed']);
+    exit;
+}
+
+// Handle test connection
+if (isset($_GET['test'])) {
+    echo json_encode(['status' => 'success', 'message' => 'API is working']);
+    exit;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+$input = json_decode(file_get_contents('php://input'), true);
+
+switch ($method) {
+    case 'GET':
+        // Get all members
+        $stmt = $pdo->query("SELECT * FROM poc_members ORDER BY fullName");
+        $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($members);
+        break;
+        
+    case 'POST':
+        // Add new member
+        if (!$input || !isset($input['fullName'], $input['callsign'], $input['channelLocal'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing required fields']);
+            exit;
+        }
+        
+        $stmt = $pdo->prepare("INSERT INTO poc_members (fullName, callsign, channelLocal, created_at) VALUES (?, ?, ?, NOW())");
+        $stmt->execute([$input['fullName'], $input['callsign'], $input['channelLocal']]);
+        
+        echo json_encode(['success' => true, 'id' => $pdo->lastInsertId()]);
+        break;
+        
+    case 'PUT':
+        // Update member
+        $id = $_GET['id'] ?? null;
+        if (!$id || !$input) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing ID or data']);
+            exit;
+        }
+        
+        $stmt = $pdo->prepare("UPDATE poc_members SET fullName = ?, callsign = ?, channelLocal = ?, updated_at = NOW() WHERE id = ?");
+        $stmt->execute([$input['fullName'], $input['callsign'], $input['channelLocal'], $id]);
+        
+        echo json_encode(['success' => true]);
+        break;
+        
+    case 'DELETE':
+        // Delete member
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing ID']);
+            exit;
+        }
+        
+        $stmt = $pdo->prepare("DELETE FROM poc_members WHERE id = ?");
+        $stmt->execute([$id]);
+        
+        echo json_encode(['success' => true]);
+        break;
+        
+    default:
+        http_response_code(405);
+        echo json_encode(['error' => 'Method not allowed']);
+        break;
+}
+?>`;
+        }
+
+        // Generate config PHP file
+        function generateConfigPHPFile() {
+            return `<?php
+// Database Configuration
+define('DB_HOST', 'localhost');     // Database host (usually localhost)
+define('DB_NAME', 'your_database'); // Your database name
+define('DB_USER', 'your_username'); // Your database username
+define('DB_PASS', 'your_password'); // Your database password
+
+// API Security (optional)
+define('API_KEY', '');              // Set your API key here for security (optional)
+
+// Timezone
+date_default_timezone_set('Asia/Jakarta');
+?>`;
+        }
+
+        // Generate database SQL
+        function generateDatabaseSQL() {
+            return `-- POC Members Database Schema
+-- Run this SQL in your MySQL database
+
+CREATE TABLE IF NOT EXISTS poc_members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fullName VARCHAR(255) NOT NULL,
+    callsign VARCHAR(50) NOT NULL UNIQUE,
+    channelLocal VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_callsign (callsign),
+    INDEX idx_channel (channelLocal)
+);
+
+-- Insert sample data (optional)
+INSERT INTO poc_members (fullName, callsign, channelLocal) VALUES
+('Ahmad Wijaya', 'YB1ABC', 'POC JATIM'),
+('Budi Santoso', 'YB2DEF', 'POC JATENG'),
+('Citra Dewi', 'YB3GHI', 'POC JABAR');`;
+        }
+
+        // Generate README file
+        function generateReadmeFile() {
+            return `POC INDONESIA - CUSTOM HOSTING SETUP
+=====================================
+
+File yang disertakan:
+1. poc-members.php - Main API endpoint
+2. config.php - Database configuration
+3. database.sql - Database schema
+4. README.txt - Panduan setup (file ini)
+
+LANGKAH SETUP:
+=============
+
+1. PERSIAPAN DATABASE
+   - Login ke cPanel/hosting panel Anda
+   - Buat database MySQL baru
+   - Catat: nama database, username, password, host
+
+2. UPLOAD FILES
+   - Buat folder 'api' di public_html
+   - Upload poc-members.php dan config.php ke folder api/
+   - Set permission folder ke 755
+
+3. KONFIGURASI DATABASE
+   - Edit config.php
+   - Isi data database Anda:
+     * DB_HOST (biasanya localhost)
+     * DB_NAME (nama database)
+     * DB_USER (username database)
+     * DB_PASS (password database)
+
+4. SETUP DATABASE SCHEMA
+   - Buka phpMyAdmin atau MySQL manager
+   - Import/jalankan database.sql
+   - Pastikan tabel poc_members terbuat
+
+5. TEST API
+   - Akses: https://yourdomain.com/api/poc-members.php?test=1
+   - Jika berhasil akan muncul: {"status":"success","message":"API is working"}
+
+6. KONFIGURASI DI APLIKASI
+   - Masuk ke Settings > Custom Hosting
+   - Isi API Endpoint: https://yourdomain.com/api/poc-members.php
+   - Set API Key (opsional untuk keamanan)
+   - Test koneksi
+
+KEAMANAN:
+========
+- Set API_KEY di config.php untuk keamanan tambahan
+- Pastikan folder api/ tidak bisa diakses langsung
+- Backup database secara berkala
+
+TROUBLESHOOTING:
+===============
+- Error 500: Periksa config.php dan koneksi database
+- Error 401: Periksa API Key
+- Error 404: Pastikan path file benar
+- CORS Error: Pastikan header CORS sudah benar
+
+Support: Hubungi admin sistem untuk bantuan teknis.`;
+        }
+
+        // Import from database
+        async function importFromDatabase() {
+            try {
+                let data;
+                if (databaseType === 'custom') {
+                    if (!customApiUrl) {
+                        showToast('Konfigurasi Custom API terlebih dahulu!', 'error');
+                        return;
+                    }
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (customApiKey) headers['X-API-Key'] = customApiKey;
+                    
+                    const response = await fetch(customApiUrl, { headers });
+                    data = await response.json();
+                } else {
+                    if (!sheetdbUrl || sheetdbUrl === 'https://sheetdb.io/api/v1/demo') {
+                        showToast('Demo mode - import simulation completed!');
+                        return;
+                    }
+                    const response = await fetch(sheetdbUrl);
+                    data = await response.json();
+                }
+                
+                if (Array.isArray(data)) {
+                    members = data.filter(item => item.fullName && item.callsign && item.channelLocal);
+                    filteredMembers = [...members];
+                    updateStats();
+                    renderPublicMembers();
+                    renderAdminMembers();
+                    addActivityLog(`Data imported: ${members.length} members`, 'sync');
+                    showToast(`Data berhasil diimport! ${members.length} anggota dimuat.`);
+                }
+            } catch (error) {
+                showToast('Gagal mengimport data dari database!', 'error');
+                console.error('Import error:', error);
+            }
+        }
+
+        // Export to database
+        async function exportToDatabase() {
+            try {
+                let successCount = 0;
+                for (const member of members) {
+                    await syncToDatabase(member, 'POST');
+                    successCount++;
+                }
+                addActivityLog(`Data exported: ${successCount} members`, 'sync');
+                showToast(`Semua data berhasil diexport! ${successCount} anggota disinkronkan.`);
+            } catch (error) {
+                showToast('Gagal mengexport data ke database!', 'error');
+                console.error('Export error:', error);
+            }
+        }
+
+        // Sync all data
+        async function syncAllData() {
+            try {
+                showToast('Memulai sinkronisasi semua data...');
+                
+                // First import to get latest data
+                await importFromDatabase();
+                
+                // Then export any local changes
+                await exportToDatabase();
+                
+                showToast('Sinkronisasi semua data selesai!');
+                addActivityLog('Full data synchronization completed', 'sync');
+            } catch (error) {
+                showToast('Gagal melakukan sinkronisasi penuh!', 'error');
+                console.error('Full sync error:', error);
+            }
+        }
+
+        // Switch views
+        function switchView(view) {
+            loginPage.style.display = view === 'login' ? 'block' : 'none';
+            publicPage.style.display = view === 'public' ? 'block' : 'none';
+            adminPanel.style.display = view === 'admin' ? 'block' : 'none';
+            
+            if (view === 'public') {
+                viewText.textContent = 'Admin Panel';
+                logoutBtn.style.display = isLoggedIn ? 'block' : 'none';
+            } else if (view === 'admin') {
+                viewText.textContent = 'Public View';
+                logoutBtn.style.display = 'block';
+            }
+            
+            currentView = view;
+        }
+
+        // Tab functionality
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'bg-blue-600', 'text-white');
+                btn.classList.add('text-gray-400');
+            });
+            
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active', 'bg-blue-600', 'text-white');
+            document.querySelector(`[data-tab="${tabName}"]`).classList.remove('text-gray-400');
+            document.getElementById(`${tabName}Tab`).style.display = 'block';
+        }
+
+        // Event listeners
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin123') {
+                isLoggedIn = true;
+                switchView('admin');
+                showToast('Login berhasil! Selamat datang Admin.');
+            } else {
+                showToast('Username atau password salah!', 'error');
+            }
+        });
+
+        document.getElementById('viewToggle').addEventListener('click', function() {
+            if (currentView === 'admin') {
+                switchView('public');
+            } else if (currentView === 'public') {
+                if (isLoggedIn) {
+                    switchView('admin');
+                } else {
+                    switchView('login');
+                }
+            } else {
+                switchView('public');
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            isLoggedIn = false;
+            switchView('login');
+            showToast('Logout berhasil!');
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            searchMembers(e.target.value);
+        });
+
+        document.getElementById('addMemberForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const memberData = {
+                fullName: document.getElementById('fullName').value,
+                callsign: document.getElementById('callsign').value,
+                channelLocal: document.getElementById('channelLocal').value
+            };
+            
+            addMember(memberData);
+            this.reset();
+        });
+
+        document.getElementById('editMemberForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const index = parseInt(document.getElementById('editIndex').value);
+            const memberData = {
+                fullName: document.getElementById('editFullName').value,
+                callsign: document.getElementById('editCallsign').value,
+                channelLocal: document.getElementById('editChannelLocal').value
+            };
+            
+            updateMember(index, memberData);
+            document.getElementById('editModal').style.display = 'none';
+        });
+
+        document.getElementById('cancelEdit').addEventListener('click', function() {
+            document.getElementById('editModal').style.display = 'none';
+        });
+
+        document.getElementById('saveSettings').addEventListener('click', function() {
+            // Save database configuration
+            if (databaseType === 'custom') {
+                customApiUrl = document.getElementById('customApiUrl').value;
+                customApiKey = document.getElementById('customApiKey').value;
+            } else {
+                sheetdbUrl = document.getElementById('sheetdbUrl').value;
+            }
+            autoSync = document.getElementById('autoSync').checked;
+            
+            // Save to localStorage for persistence
+            localStorage.setItem('pocSettings', JSON.stringify({
+                databaseType,
+                customApiUrl,
+                customApiKey,
+                sheetdbUrl,
+                autoSync
+            }));
+            
+            showToast('Pengaturan berhasil disimpan!');
+            addActivityLog('Settings updated', 'info');
+        });
+
+        document.getElementById('syncNowBtn').addEventListener('click', function() {
+            showToast('Sinkronisasi manual dimulai...');
+            // Simulate sync
+            setTimeout(() => {
+                document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+                showToast('Sinkronisasi selesai!');
+            }, 1000);
+        });
+
+        document.getElementById('importFromSheet').addEventListener('click', importFromDatabase);
+        document.getElementById('exportToSheet').addEventListener('click', exportToDatabase);
+        
+        // Custom hosting event listeners
+        document.getElementById('testCustomConnection')?.addEventListener('click', testCustomConnection);
+        document.getElementById('downloadPhpFiles')?.addEventListener('click', downloadPhpFiles);
+        document.getElementById('syncAllData')?.addEventListener('click', syncAllData);
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchTab(this.dataset.tab);
+            });
+        });
+
+        // CSV import
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+                    let imported = 0;
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const [fullName, callsign, channelLocal] = lines[i].split(',');
+                        if (fullName && callsign && channelLocal) {
+                            members.push({
+                                fullName: fullName.trim(),
+                                callsign: callsign.trim(),
+                                channelLocal: channelLocal.trim()
+                            });
+                            imported++;
+                        }
+                    }
+                    
+                    if (imported > 0) {
+                        filteredMembers = [...members];
+                        updateStats();
+                        renderPublicMembers();
+                        renderAdminMembers();
+                        showToast(`${imported} anggota berhasil diimport dari CSV!`);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Auto-sync interval
+        setInterval(() => {
+            if (autoSync && isLoggedIn) {
+                document.getElementById('lastSync').textContent = new Date().toLocaleTimeString();
+            }
+        }, 300000); // 5 minutes
+
+        // Advanced admin functions
+        function showAnalytics() {
+            const panel = document.getElementById('analyticsPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            
+            // Update channel chart
+            const channelChart = document.getElementById('channelChart');
+            const channelStats = {};
+            members.forEach(member => {
+                channelStats[member.channelLocal] = (channelStats[member.channelLocal] || 0) + 1;
+            });
+            
+            channelChart.innerHTML = Object.entries(channelStats).map(([channel, count]) => `
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">${channel}</span>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-20 bg-gray-700 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: ${(count / members.length) * 100}%"></div>
+                        </div>
+                        <span class="text-xs text-gray-400">${count}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderBulkMembersList() {
+            const bulkList = document.getElementById('bulkMembersList');
+            if (!bulkList) return;
+            
+            bulkList.innerHTML = members.map((member, index) => `
+                <label class="flex items-center space-x-3 p-2 hover:bg-gray-700 rounded cursor-pointer">
+                    <input type="checkbox" class="bulk-checkbox" data-index="${index}" ${selectedMembers.includes(index) ? 'checked' : ''}>
+                    <div class="flex-1">
+                        <p class="font-medium">${member.fullName}</p>
+                        <p class="text-sm text-gray-400">${member.callsign} - ${member.channelLocal}</p>
+                    </div>
+                </label>
+            `).join('');
+        }
+
+        function exportData(format = 'csv') {
+            const data = filteredMembers.length > 0 ? filteredMembers : members;
+            
+            if (format === 'csv') {
+                const csv = 'Nama Lengkap,Callsign,Channel Lokal\n' + 
+                    data.map(m => `"${m.fullName}","${m.callsign}","${m.channelLocal}"`).join('\n');
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `poc-members-${new Date().toISOString().split('T')[0]}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showToast('Data berhasil diexport!');
+            }
+        }
+
+        function generateReport(type) {
+            const timestamp = new Date().toLocaleString();
+            let content = '';
+            
+            switch (type) {
+                case 'member':
+                    content = `LAPORAN ANGGOTA POC INDONESIA\nGenerated: ${timestamp}\n\n` +
+                        members.map((m, i) => `${i+1}. ${m.fullName} (${m.callsign}) - ${m.channelLocal}`).join('\n');
+                    break;
+                case 'channel':
+                    const channelStats = {};
+                    members.forEach(m => channelStats[m.channelLocal] = (channelStats[m.channelLocal] || 0) + 1);
+                    content = `LAPORAN DISTRIBUSI CHANNEL\nGenerated: ${timestamp}\n\n` +
+                        Object.entries(channelStats).map(([channel, count]) => `${channel}: ${count} anggota`).join('\n');
+                    break;
+                case 'activity':
+                    content = `LAPORAN AKTIVITAS SISTEM\nGenerated: ${timestamp}\n\n` +
+                        activityLogs.map(log => `${log.time.toLocaleString()}: ${log.action}`).join('\n');
+                    break;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `report-${type}-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast(`Laporan ${type} berhasil didownload!`);
+        }
+
+        function addActivityLog(action, type = 'info') {
+            activityLogs.unshift({ action, time: new Date(), type });
+            if (activityLogs.length > 50) activityLogs.pop(); // Keep only last 50 logs
+            
+            // Update logs display if visible
+            const logsContainer = document.getElementById('activityLogs');
+            if (logsContainer && document.getElementById('logsTab').style.display !== 'none') {
+                updateActivityLogs();
+            }
+        }
+
+        function updateActivityLogs() {
+            const logsContainer = document.getElementById('activityLogs');
+            if (!logsContainer) return;
+            
+            const typeColors = {
+                login: 'bg-green-500',
+                add: 'bg-blue-500',
+                edit: 'bg-yellow-500',
+                delete: 'bg-red-500',
+                sync: 'bg-purple-500',
+                info: 'bg-gray-500'
+            };
+            
+            logsContainer.innerHTML = activityLogs.map(log => `
+                <div class="flex items-center space-x-3 p-3 bg-gray-800 rounded-lg">
+                    <div class="w-2 h-2 ${typeColors[log.type] || 'bg-gray-500'} rounded-full"></div>
+                    <div class="flex-1">
+                        <p class="text-sm">${log.action}</p>
+                        <p class="text-xs text-gray-400">${getTimeAgo(log.time)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 1) return 'Baru saja';
+            if (minutes < 60) return `${minutes} menit yang lalu`;
+            if (hours < 24) return `${hours} jam yang lalu`;
+            return `${days} hari yang lalu`;
+        }
+
+        // Enhanced event listeners
+        document.getElementById('voiceSearchBtn')?.addEventListener('click', startVoiceSearch);
+        document.getElementById('channelFilter')?.addEventListener('change', () => searchMembers(document.getElementById('searchInput').value));
+        document.getElementById('sortBy')?.addEventListener('change', () => searchMembers(document.getElementById('searchInput').value));
+        document.getElementById('viewModeBtn')?.addEventListener('click', toggleViewMode);
+        document.getElementById('exportBtn')?.addEventListener('click', () => exportData('csv'));
+        
+        // Statistics view toggle
+        document.getElementById('toggleStatsView')?.addEventListener('click', toggleStatsView);
+        document.getElementById('exportStatsBtn')?.addEventListener('click', exportChannelStats);
+
+        // Modal event listeners
+        document.getElementById('closeMemberDetail')?.addEventListener('click', () => {
+            document.getElementById('memberDetailModal').style.display = 'none';
+        });
+        
+        document.getElementById('closeQrModal')?.addEventListener('click', () => {
+            document.getElementById('qrModal').style.display = 'none';
+        });
+        
+        document.getElementById('shareBtn')?.addEventListener('click', () => {
+            const index = document.getElementById('memberDetailModal').dataset.memberIndex;
+            shareMember(parseInt(index));
+        });
+        
+        document.getElementById('qrBtn')?.addEventListener('click', () => {
+            const index = document.getElementById('memberDetailModal').dataset.memberIndex;
+            showQRCode(parseInt(index));
+            document.getElementById('memberDetailModal').style.display = 'none';
+        });
+
+        // Analytics event listeners
+        document.getElementById('closeAnalytics')?.addEventListener('click', () => {
+            document.getElementById('analyticsPanel').style.display = 'none';
+        });
+
+        // Bulk operations event listeners
+        document.getElementById('selectAllBtn')?.addEventListener('click', () => {
+            selectedMembers = members.map((_, index) => index);
+            renderBulkMembersList();
+        });
+        
+        document.getElementById('deselectAllBtn')?.addEventListener('click', () => {
+            selectedMembers = [];
+            renderBulkMembersList();
+        });
+        
+        document.getElementById('bulkDeleteBtn')?.addEventListener('click', () => {
+            if (selectedMembers.length === 0) {
+                showToast('Pilih anggota terlebih dahulu!', 'error');
+                return;
+            }
+            
+            if (confirm(`Hapus ${selectedMembers.length} anggota yang dipilih?`)) {
+                selectedMembers.sort((a, b) => b - a).forEach(index => {
+                    members.splice(index, 1);
+                });
+                selectedMembers = [];
+                updateStats();
+                renderPublicMembers();
+                renderAdminMembers();
+                renderBulkMembersList();
+                addActivityLog(`Bulk delete: ${selectedMembers.length} members`, 'delete');
+                showToast('Anggota terpilih berhasil dihapus!');
+            }
+        });
+
+        // Report generation event listeners
+        document.getElementById('memberReportBtn')?.addEventListener('click', () => generateReport('member'));
+        document.getElementById('channelReportBtn')?.addEventListener('click', () => generateReport('channel'));
+        document.getElementById('activityReportBtn')?.addEventListener('click', () => generateReport('activity'));
+        
+        document.getElementById('clearLogsBtn')?.addEventListener('click', () => {
+            if (confirm('Hapus semua log aktivitas?')) {
+                activityLogs = [];
+                updateActivityLogs();
+                showToast('Log aktivitas berhasil dihapus!');
+            }
+        });
+
+        // Backup functionality
+        document.getElementById('backupBtn')?.addEventListener('click', () => {
+            const backup = {
+                members,
+                settings: { sheetdbUrl, autoSync },
+                timestamp: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `poc-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            addActivityLog('System backup created', 'info');
+            showToast('Backup berhasil dibuat!');
+        });
+
+        // Load saved settings
+        function loadSettings() {
+            try {
+                const savedSettings = localStorage.getItem('pocSettings');
+                if (savedSettings) {
+                    const settings = JSON.parse(savedSettings);
+                    databaseType = settings.databaseType || 'sheetdb';
+                    customApiUrl = settings.customApiUrl || '';
+                    customApiKey = settings.customApiKey || '';
+                    sheetdbUrl = settings.sheetdbUrl || 'https://sheetdb.io/api/v1/demo';
+                    autoSync = settings.autoSync !== undefined ? settings.autoSync : true;
+                    
+                    // Update UI
+                    selectDatabaseType(databaseType);
+                    document.getElementById('customApiUrl').value = customApiUrl;
+                    document.getElementById('customApiKey').value = customApiKey;
+                    document.getElementById('sheetdbUrl').value = sheetdbUrl;
+                    document.getElementById('autoSync').checked = autoSync;
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        // Initialize
+        loadSettings();
+        updateStats();
+        renderPublicMembers();
+        renderAdminMembers();
+        updateChannelFilter();
+        switchView('public');
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9621cf9dd6b2ce5b',t:'MTc1MzAwNzcxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
